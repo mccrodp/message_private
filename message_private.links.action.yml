@@ -1,0 +1,15 @@
+# Add a 'Create a new message for %user' action link.
+# Only display the local task on other users profile, not current user's.
+message_private.user.add:
+  route_name: message_ui.add
+  title: 'Create a new message for...'
+  appears_on:
+    - entity.user.canonical
+
+# Add a 'Create a new message' action link above message_private view.
+# Get from user to Add a 'Create a new message for %user' action link
+message_private.messages.add:
+  route_name: message_ui.add
+  title: 'Create a new message for...'
+  appears_on:
+    - message_private.messages

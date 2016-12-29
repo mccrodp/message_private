@@ -1,0 +1,373 @@
+<?php
+/**
+ * @file
+ * Message Private with access permissions based on message fields.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\message\Entity\Message;
+use Drupal\user\Entity\Role;
+
+
+/**
+ * The default index for settings such as role.
+ */
+const MESSAGE_PRIVATE_DEFAULT_INDEX = 0;
+
+/**
+ * The maximum message limit.
+ */
+const MESSAGE_PRIVATE_MESSAGE_LIMIT_MAX = 1000;
+
+/**
+ * The minimum message limit.
+ */
+const MESSAGE_PRIVATE_MESSAGE_LIMIT_MIN = 1;
+
+/**
+ * The maximum message interval in minutes.
+ */
+const MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX = 1440;
+
+/**
+ * The minimum message interval in minutes.
+ */
+const MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN = 1;
+
+
+/**
+ * Implements hook_help().
+ */
+function message_private_help($route_name, RouteMatchInterface $arg) {
+  switch ($route_name) {
+    case 'help.page.message_private':
+      $output = file_get_contents(drupal_get_path('module', 'message_private') . '/README.md');
+      return \Drupal::moduleHandler()->moduleExists('markdown') ? \Drupal\Component\Utility\Xss::filterAdmin(\Drupal::moduleHandler()->invoke('markdown', 'filter', ['process', 0, -1, $output])) : '<h3>Message Private README</h3><pre>' . \Drupal\Component\Utility\Html::escape($output) . '</pre>';
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ *
+ * Perform our access control on private messages.
+ */
+function message_private_message_access(EntityInterface $message, $operation, AccountInterface $account) {
+  // Customise access check only for private messages.
+  if ($message->bundle() == 'private_message') {
+    // If checking whether a message of a particular template may be created.
+    if ($account->hasPermission('administer message private')
+      || $account->hasPermission('bypass private message access control')) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+    // Verify that the user can apply the op.
+    if ($account->hasPermission($operation . ' any message instance')
+        || $account->hasPermission($operation . ' a private_message message instance', $account)
+    ) {
+      if ($operation != 'create') {
+        // Check if the user is message author.
+        /* @var Drupal\message\Entity\message $message */
+        if ($message->getOwnerId() == $account->id()) {
+          return AccessResult::allowed()->cachePerPermissions();
+        }
+        $users = $message->get('field_message_private_to_user')->getValue();
+        if ($users && is_array($users)) {
+          foreach ($users as $user_ref) {
+            if ($user_ref['target_id'] == $account->id()) {
+              return AccessResult::allowed()->cachePerPermissions();
+            }
+          }
+        }
+      }
+      else {
+        return AccessResult::allowed()->cachePerPermissions();
+      }
+    }
+  }
+
+  // No opinion.
+  return AccessResult::neutral();
+}
+
+/**
+ * Access callback for Messages tab.
+ *
+ * Checks for the private_message bundle and user permissions.
+ *
+ * @param object $message
+ *   The message object.
+ *
+ * @return bool
+ *   TRUE if the user is allowed perform the operation, FALSE otherwise.
+ */
+// @todo: code as Access class & associate service entry to local task/actions.
+function message_private_access_callback($message) {
+  if ($message->template == 'private_message') {
+    return \Drupal::currentUser()->hasPermission('bypass private message access control') || \Drupal::currentUser()->hasPermission('view a private_message message instance');
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This function is defined to override that provided by Message UI module. This
+ * allows override specific values of the form such as the cancel link. It hides
+ * the message_text on the edit and create form, and adds custom validation.
+ */
+// @todo - check form ID is matching D8 form id.
+function message_private_form_message_private_message_form_alter($form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $entity = $form_state->getFormObject()->getEntity();
+  if ($entity->bundle() == 'private_message') {
+    if (isset($form['text']['#type'])) {
+      $form['text']['#type'] = 'hidden'; // @todo - is this necessary now?
+    }
+
+    // @todo - owner access and validation callback needs testing.
+    $form['owner']['#access'] = \Drupal::currentUser()->hasPermission('bypass private message access control');
+    $form['#validate'][] = 'message_private_form_message_private_message_form_validate';
+  }
+}
+
+/**
+ * Validation for Private Message form.
+ *
+ * @param mixed $form
+ *   The message form provided by message_ui.
+ * @param mixed $form_state
+ *   The form state including values submitted.
+ */
+// @todo - test this is called and if form should be passed by reference.
+function message_private_form_message_private_message_form_validate($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  // If there is an imposed message limit set in the admin settings interface.
+  // The correct configuration object could not be determined. You'll need to
+  // rewrite this call manually.
+  if (\Drupal::config('message_private.settings')->get('message_private_message_limit')
+    && !\Drupal::currentUser()->hasPermission('bypass private message access control')) {
+    $user = \Drupal::currentUser();
+
+    // Get the role belonging to user with max message limit.
+    $rid = _message_private_max_message_limit_role($user->getRoles());
+    /* @var $role Role */
+    $role = Role::load($rid);
+
+    // Get the message limitation settings for this role.
+    $role_name = str_replace(' ', '_', $role->get('name'));
+    $limit_name = 'message_private_' . $role_name . '_limit';
+    $interval_name = 'message_private_' . $role_name . '_interval';
+    $interval = \Drupal::config('message_private.settings')->get($interval_name);
+    $limit = \Drupal::config('message_private.settings')->get($limit_name);
+
+    // Calculate timestamp of the last interval.
+    $current_timestamp = time();
+    $interval_timestamp = strtotime('-' . $interval . ' minutes', $current_timestamp);
+
+    // Get total amount of this user's messages since last interval.
+    $query = \Drupal::entityQuery('message');
+    $total = $query->condition('template', 'private_message')
+     ->condition('timestamp', $interval_timestamp, '>')
+     ->condition('uid', $user->id())
+     ->count()
+     ->execute();
+
+    // Display error preventing message create when total messages over limit.
+    if ($total >= $limit) {
+      $form_state->setError($form, t('Message create limit reached. Please try again later.'));
+    }
+  }
+}
+
+/**
+ * Implements hook_message_insert().
+ *
+ * Send an email if a private message has been created.
+ *
+ * Currently addslashes() or equivalent is not used on the email,
+ * this may be an issue with the message module itself as I don't
+ * think escaping strings for email should be done in this module.
+ */
+function message_private_message_insert(\Drupal\message\MessageInterface $message) {
+  // Prepare message notifications for private messages if notifications are on.
+  // The correct configuration object could not be determined. You'll need to
+  // rewrite this call manually.
+  if ($message->bundle() == 'private_message'
+   && \Drupal::config('message_private.settings')->get('email_notify')) {
+    // Use message load as the $message object has issue with mail function.
+    // It causes duplicate entry, possibly as mid is missing and the mail
+    // function message_notify_send_message tries to re-save as a new message.
+    $message = Message::load($message->id());
+
+    $mail = array();
+    $users = $message->get('field_message_private_to_user');
+
+    if (!empty($users)) {
+      // Make users an array if user ref field is configured to 1 entry.
+      $users = is_array($users) ? $users : array($users);
+      foreach ($users as $user) {
+        $notify = $user->get('field_private_message_notify');
+        if (!empty($notify) && is_array($notify)) {
+          // Get the 1st value of the array as there is only 1 possible item.
+          $notify = array_shift($notify);
+        }
+        // If the user has set field for notifications, add their email.
+        if (isset($notify['value']) && $notify['value']) {
+          $mail[] = $user->mail;
+        }
+      }
+    }
+    if (!empty($mail)) {
+      /* @var \Drupal\message_notify\MessageNotifier $message_notifier */
+      $message_notifier = $this->container->get('message_notify.sender');
+      // @todo - figure out how to pass the email addresses to the notify plugin / hook.
+      $message_notifier->send($message, array('mail' => implode(',', $mail), 'email'));
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * If email notifications are disabled, hide the per user setting on user
+ * profiles, unless the user is in role with bypass access control permission.
+ */
+// @todo - check form ID matches D8 form id & add config for user notify field.
+function message_private_form_user_profile_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // The correct configuration object could not be determined. You'll need to
+  // rewrite this call manually.
+  if (!\Drupal::currentUser()->hasPermission('bypass private message access control')
+    && !\Drupal::config('message_private.settings')->get('email_notify')) {
+    $form['field_private_message_notify']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+// @todo - Is this still required in D8 to make twig template discoverable?
+function message_private_theme() {
+  $info['message_private'] = array(
+    'render element' => 'elements',
+    'template' => 'message--private_message',
+    'base hook' => 'message_private',
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_message_view_alter().
+ */
+// @todo - Is this still required in D8 to make twig template discoverable?
+function message_private_message_view_alter(&$build) {
+  // Use template_preprocess_message_private for private_message messages only.
+  if (!empty($build['#bundle']) && $build['#bundle'] == 'private_message') {
+    $build['#theme'] = 'message_private';
+  }
+}
+
+/**
+ * Process variables for message--private_message.html.twig.
+ */
+// @todo - Is there a better alternative to this?
+function template_preprocess_message_private(&$variables) {
+  // Call the parent message template function defined in message module.
+  if (function_exists('template_preprocess_message')) {
+    template_preprocess_message($variables);
+  }
+  // Save the message entity for ease of access.
+  if (is_object($variables['elements']['#entity'])) {
+    $message = $variables['elements']['#entity'];
+  }
+  // Create submitted variable containing user who created the message and date.
+  if (!empty($message) && $uid = $message->uid) {
+    $variables['date'] = format_date($message->timestamp);
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $variables['name'] = theme('username', array('account' => user_load($uid)));
+
+    $variables['submitted'] = t('Sent by !username on !datetime', array(
+        '!username' => $variables['name'],
+        '!datetime' => $variables['date'],
+    ));
+  }
+}
+
+/**
+ * Get the role id with the maximum allowed message create limit.
+ *
+ * Using the values set for each role, calculate the the lowest time interval
+ * required per message: INTERVAL / LIMIT and return the role with this value.
+ *
+ * @param null|array $roles
+ *   An assoc array of role names and ids.
+ *
+ * @return mixed
+ *   Either a role id or null.
+ */
+// @todo - Is there a better location for this?
+function _message_private_max_message_limit_role($roles) {
+  $limits = array();
+
+  // The correct configuration object could not be determined. You'll need to
+  // rewrite this call manually.
+  // @todo : default limit init to 0 in yml, needs implementation accordingly.
+  $limit = \Drupal::config('message_private.settings')->get('default_limit');
+
+  // The correct configuration object could not be determined. You'll need to
+  // rewrite this call manually.
+  $interval = \Drupal::config('message_private.settings')->get('default_interval');
+
+  // Ensure we have existing valid numerical values for both variables.
+  if (!empty($limit) && ctype_digit($limit) && !empty($interval) && ctype_digit($interval)) {
+    $limits[MESSAGE_PRIVATE_DEFAULT_INDEX] = $interval / $limit;
+  }
+
+  // Cycle through the roles and get each limit and interval.
+  foreach ($roles as $rid => $role) {
+    $role_name = str_replace(' ', '_', $role);
+    $limit_name = 'message_private_' . $role_name . '_limit';
+    $interval_name = 'message_private_' . $role_name . '_interval';
+    // The correct configuration object could not be determined. You'll need to
+    // rewrite this call manually.
+    $interval = \Drupal::config('message_private.settings')->get($interval_name);
+
+    // The correct configuration object could not be determined. You'll need to
+    // rewrite this call manually.
+    $limit = \Drupal::config('message_private.settings')->get($limit_name);
+
+
+    // Ensure we have existing valid numerical values for both variables.
+    if (!empty($limit) && ctype_digit($limit) && !empty($interval) && ctype_digit($interval)) {
+      $limits[$rid] = $interval / $limit;
+    }
+  }
+  // The min value corresponds to the lowest interval required per message.
+  return array_search(min($limits), $limits);
+}
+
+/**
+ * Views Plugin access callback.
+ *
+ * @return \Drupal\Core\Access\AccessResult
+ */
+function _message_private_inbox_access() {
+  $account = \Drupal::currentUser();
+  // Load the current node.
+  $uid = \Drupal::routeMatch()->getParameter('user');
+
+  // Check if the current user owns the inbox.
+  if (!empty($uid) && $account->id() == $uid) {
+    return AccessResult::allowed();
+  }
+
+  // Allow if the user has the bypass permission
+  return AccessResult::allowedIfHasPermission($account, 'bypass private message access control');
+}

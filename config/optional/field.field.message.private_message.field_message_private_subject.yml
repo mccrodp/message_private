@@ -1,0 +1,23 @@
+uuid: cf292e80-c1b8-4bf8-8cb0-a7c5e6e26806
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.message.field_message_private_subject
+    - message.template.private_message
+_core:
+  default_config_hash: qbIzNtN7amEbCO0VrcDJtqc_T18qsnHpV8DakClDBrc
+id: message.private_message.field_message_private_subject
+field_name: field_message_private_subject
+entity_type: message
+bundle: private_message
+label: Subject
+description: 'Enter message subject.'
+required: false
+translatable: false
+default_value:
+  -
+    value: ''
+default_value_callback: ''
+settings: {  }
+field_type: string

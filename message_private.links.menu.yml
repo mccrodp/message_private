@@ -1,0 +1,5 @@
+message_private.settings:
+  title: 'Message Private'
+  description: 'Message Private settings.'
+  parent: 'message.main_settings'
+  route_name: message_private.settings

@@ -1,0 +1,12 @@
+uuid: 178850ae-df19-4efa-9d00-e5a5bff20e0f
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: QzVUBM8GTfka1Gk4FkMXtpB__vi9CQkfSbyBeEScCN8
+template: private_message
+label: 'Private Message'
+description: 'Private Message message template.'
+text:
+  - "<p>Private Message -</p>\r\n"
+settings: {  }
