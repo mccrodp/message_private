@@ -1,0 +1,24 @@
+uuid: 4fc087c4-d646-4c4f-a467-d2234eaf5fb3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_message_private_usr_notify
+  module:
+    - user
+id: user.user.field_message_private_usr_notify
+field_name: field_message_private_usr_notify
+entity_type: user
+bundle: user
+label: 'Message Private Notifications'
+description: 'Receive email notifications for new Private Messages.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,22 @@
+uuid: fdd970ed-47c0-4e2a-9a0a-2385ee3fba4d
+langcode: en
+status: true
+dependencies:
+  module:
+    - message
+    - user
+_core:
+  default_config_hash: bwE2oENG8iTdi12WvMTPoxJo9qQs_g0fe4sxM6sfVQk
+id: message.field_message_private_to_user
+field_name: field_message_private_to_user
+entity_type: message
+type: entity_reference
+settings:
+  target_type: user
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

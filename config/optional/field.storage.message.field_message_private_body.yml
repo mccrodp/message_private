@@ -1,0 +1,21 @@
+uuid: 6bd4e142-13ee-4ec4-8947-0e489a6f7c11
+langcode: en
+status: true
+dependencies:
+  module:
+    - message
+_core:
+  default_config_hash: V_kmURMHj2yWYO-7UprE0_sw1J8EDHZBhNIfE0HQqF4
+id: message.field_message_private_body
+field_name: field_message_private_body
+entity_type: message
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

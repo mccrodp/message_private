@@ -1,0 +1,33 @@
+<?php
+/**
+ * @file
+ * Message Private un-installer.
+ */
+
+/**
+ * Implements hook_uninstall.
+ *
+ * Remove the field_message_private_usr_notify field.
+ */
+function message_private_uninstall() {
+  $properties = array(
+    'entity_type' => 'user',
+    'bundle' => 'user',
+    'include_deleted' => TRUE,
+  );
+
+  // Get the fields based on the above properties.
+  $fields = \Drupal::entityManager()->getStorage('field_config')->loadByProperties($properties);
+
+  // Cycle through user fields looking for our user notify field.
+  foreach ($fields as $field) {
+    /* @var \Drupal\Core\Field\FieldConfigBase $field */
+    // If we have the user notify field, purge the data and remove.
+    if(!empty($field->getName() == 'field_message_private_usr_notify')) {
+      // Purge previously deleted field tables for entity type.
+      Drupal::entityManager()->getStorage($field->getTargetEntityTypeId())->purgeFieldData($field, 100);
+      field_cron();
+      $field->delete();
+    }
+  }
+}

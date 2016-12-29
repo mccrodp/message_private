@@ -1,0 +1,11 @@
+name: 'Message Private'
+description: 'Private messages with message access based on message fields.'
+core: 8.x
+package: Message
+type: module
+configure: message_private.admin_settings
+dependencies:
+  - views
+  - message
+  - message_notify
+  - message_ui

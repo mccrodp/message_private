@@ -1,0 +1,34 @@
+message_private.settings:
+  path: '/admin/config/message/message-private'
+  defaults:
+    _title: 'Message Private Settings'
+    _description: 'Message Private settings'
+    _form: 'Drupal\message_private\Form\SettingsForm'
+  requirements:
+    _permission: 'administer message private'
+  options:
+    _admin_route: TRUE
+
+message_private.messages:
+  path: '/user/{user}/messages'
+  defaults:
+    _title: 'Inbox'
+  description: 'Message Private Inbox'
+  requirements:
+    _permission: 'overview messages'
+
+message_private.messages.inbox:
+  path: '/user/{user}/messages'
+  defaults:
+    _title: 'Inbox'
+  description: 'Message Private Inbox'
+  requirements:
+    _permission: 'overview messages'
+
+message_private.messages.sent:
+  path: '/user/{user}/messages/sent'
+  defaults:
+    _title: 'Sent'
+  description: 'Message Private Sent'
+  requirements:
+    _permission: 'overview messages'
