@@ -1,5 +1,3 @@
-**D8 Status : Under Development (non functional)**
-
 CONTENTS OF THIS FILE
 ---------------------
  * Introduction
@@ -29,7 +27,7 @@ DEPENDENCIES
 The message_private module requires the following modules:
  * Message (https://drupal.org/project/message)
  * Message Notify (https://drupal.org/project/message_notify)
- * Message UI (https://drupal.org/project/message_ui)
+ * Message UI (https://github.com/RoySegall/message_ui)
 
 
 INSTALLATION

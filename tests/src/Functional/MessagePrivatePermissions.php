@@ -5,12 +5,12 @@
  * Definition of Drupal\message_private\Tests\MessagePrivatePermissions.
  */
 
-namespace Drupal\message_private\Tests;
+namespace Drupal\Tests\message_private\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Tests\message\Functional\MessageTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
-use Drupal\message\Tests\MessageTestBase;
 use Drupal\message\Entity\Message;
 
 /**
@@ -77,52 +77,66 @@ class MessagePrivatePermissions extends MessageTestBase {
 
     // Verify the user can't create the message.
     $this->drupalGet($create_url);
-    $this->assertResponse(403, t("The user can't create a private message."));
+    $this->assertResponse(403); // The user can't create a private message.
 
     // Grant and check create permissions for a message.
     $this->grantMessagePrivatePermission('create');
     $this->drupalGet($create_url);
 
-    // If we get a valid response, create a message.
-    if ($this->assertResponse(200, t("The user can create a private message."))) {
-      // Create a message at current page / url.
-      $this->drupalPostForm(NULL, array(), t('Save'));
-    }
+    // If we get a valid response.
+    $this->assertResponse(200); // Check for valid response.
+
+    // Create a message at current page / url.
+    $this->drupalPostForm(NULL, array(), t('Save'));
 
     $msg_url = '/message/1'; // Create the message url.
 
     // Verify the user now can see the text.
     $this->grantMessagePrivatePermission('view');
     $this->drupalGet($msg_url);
-    $this->assertResponse(200, "The user can view a private message.");
+
+    // The user can view a private message.
+    $this->assertResponse(200);
 
     // Verify can't edit the message.
     $this->drupalGet($msg_url . '/edit');
-    $this->assertResponse(403, "The user can't edit a private message.");
+
+    // The user can't edit a private message.
+    $this->assertResponse(403);
 
     // Grant permission to the user.
     $this->grantMessagePrivatePermission('edit');
     $this->drupalGet($msg_url . '/edit');
-    $this->assertResponse(200, "The user can't edit a private message.");
+
+    // The user can't edit a private message.
+    $this->assertResponse(200);
 
     // Verify the user can't delete the message.
     $this->drupalGet($msg_url . '/delete');
-    $this->assertResponse(403, "The user can't delete the private message");
+
+    // The user can't delete the private message.
+    $this->assertResponse(403);
 
     // Grant the permission to the user.
     $this->grantMessagePrivatePermission('delete');
     $this->drupalPostForm($msg_url . '/delete', array(), t('Delete'));
-    $this->assertResponse(200, "The user can delete a private message.");
+
+    // The user can delete a private message.
+    $this->assertResponse(200);
 
     // Set up admin url.
     $admin_url = '/admin/config/system/message-private';
     // User has no permission for the admin page - verify access denied.
     $this->drupalGet($admin_url);
-    $this->assertResponse(403, t("The user cannot administer message_private."));
+
+    // The user cannot administer message_private.
+    $this->assertResponse(403);
 
     user_role_grant_permissions($this->rid, array('administer message private'));
     $this->drupalGet($admin_url);
-    $this->assertResponse(200, "The user can administer message_private.");
+
+    // The user can administer message_private.
+    $this->assertResponse(200);
 
     // Create a new user with the bypass access permission and verify the bypass.
     $this->drupalLogout();
@@ -131,7 +145,9 @@ class MessagePrivatePermissions extends MessageTestBase {
     // Verify the user can by pass the message access control.
     $this->drupalLogin($user);
     $this->drupalGet($create_url);
-    $this->assertResponse(200, 'The user can bypass the private message access control.');
+
+    // The user can bypass the private message access control.
+    $this->assertResponse(200);
   }
 
   /**
