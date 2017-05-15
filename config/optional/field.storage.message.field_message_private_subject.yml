@@ -1,11 +1,8 @@
-uuid: cf3443df-beaf-4e94-95d4-e6461577d4d6
 langcode: en
 status: true
 dependencies:
   module:
     - message
-_core:
-  default_config_hash: Dg9x90SguN-2BDkT9idSDAia9BL8rYexkKItNl7u1AQ
 id: message.field_message_private_subject
 field_name: field_message_private_subject
 entity_type: message

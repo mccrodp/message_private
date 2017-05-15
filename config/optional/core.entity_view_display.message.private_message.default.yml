@@ -1,4 +1,3 @@
-uuid: e0c1c213-6883-4630-8587-6eabe7d107b1
 langcode: en
 status: true
 dependencies:
@@ -9,8 +8,6 @@ dependencies:
     - message.template.private_message
   module:
     - user
-_core:
-  default_config_hash: lpvYrgS_H2-h-ZgjM4cMoH-_ogf4CCDFbNZbUiG7zyg
 id: message.private_message.default
 targetEntityType: message
 bundle: private_message

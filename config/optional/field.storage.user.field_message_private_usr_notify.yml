@@ -1,11 +1,8 @@
-uuid: 8475d5d9-a759-4aff-b802-fcfbb5260a16
 langcode: en
 status: true
 dependencies:
   module:
     - user
-_core:
-  default_config_hash: 1-4VSfI1AMKOOtKVsXTs11O1fgTNaJiUzXZMlsuCrAI
 id: user.field_message_private_usr_notify
 field_name: field_message_private_usr_notify
 entity_type: user
