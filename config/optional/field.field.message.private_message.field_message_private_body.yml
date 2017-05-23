@@ -1,12 +1,9 @@
-uuid: 94a69bc5-0e6f-40d9-ac64-b534facaae95
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.message.field_message_private_body
     - message.template.private_message
-_core:
-  default_config_hash: pJ31I7cSY8uoEz0deyB78BXJdE7gjs-jnfmHFW_FpAQ
 id: message.private_message.field_message_private_body
 field_name: field_message_private_body
 entity_type: message

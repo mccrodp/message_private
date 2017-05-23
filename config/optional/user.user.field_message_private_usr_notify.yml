@@ -1,4 +1,3 @@
-uuid: 39b154d5-bd3c-4b78-bc5d-12784718cb45
 langcode: en
 status: true
 dependencies:
@@ -20,5 +19,3 @@ settings:
   on_label: 'On'
   off_label: 'Off'
 field_type: boolean
-_core:
-  default_config_hash: FQ7l9yUuUlcG3NohBfN8XefQm5j3yWwzomCHLLlL_D8

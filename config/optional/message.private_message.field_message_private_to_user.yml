@@ -1,4 +1,3 @@
-uuid: bcfc43e3-2726-4b76-99b6-2602ad6a4610
 langcode: en
 status: true
 dependencies:
@@ -25,5 +24,3 @@ settings:
       field: _none
     auto_create: false
 field_type: entity_reference
-_core:
-  default_config_hash: Duu4JwPBEZvoywiYVIZC2xj0RlqLq2wdIxLVdRf9geI

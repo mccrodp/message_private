@@ -1,4 +1,3 @@
-uuid: 746ddbc4-4082-4754-bf00-dd6fe24048d8
 langcode: en
 status: true
 dependencies:
@@ -9,8 +8,6 @@ dependencies:
   module:
     - message
     - message_private
-_core:
-  default_config_hash: 4gJ9ljaCqVU6GARQwzXb0cY0PTtJFMySLFDM0WvF-sU
 id: message_private
 label: 'Message Private'
 module: views
