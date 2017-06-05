@@ -20,6 +20,7 @@ message_private.messages:
 message_private.messages.inbox:
   path: '/user/{user}/messages'
   defaults:
+    _controller: '\Drupal\message_private\Controller\PrivateMessageController::inBox'
     _title: 'Inbox'
   description: 'Message Private Inbox'
   requirements:
@@ -28,6 +29,7 @@ message_private.messages.inbox:
 message_private.messages.sent:
   path: '/user/{user}/messages/sent'
   defaults:
+    _controller: '\Drupal\message_private\Controller\PrivateMessageController::sent'
     _title: 'Sent'
   description: 'Message Private Sent'
   requirements:
