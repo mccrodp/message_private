@@ -2,6 +2,15 @@ bypass private message access control:
   title: 'Bypass message private access control'
   description: 'Grant to the user the permission to apply CRUD option on any private messages.'
   restrict access: true
+
 administer message private:
   title: 'Administer message private'
   description: 'Access the message private administration pages.'
+
+administer message threads:
+  title: 'Administer message threads'
+  description: 'Access to administer message threads.'
+
+overview message threads:
+  title: 'Overview message threads'
+  description: 'Access to view message threads overview page.'
