@@ -426,7 +426,7 @@ return;
 //
 //    ],
   ];
-  ksm($form);
+//  ksm($form);
 //  $form['fields']['author'] = array(
 //     '#title' => 'Author'
 //  );
@@ -435,11 +435,10 @@ return;
 function message_private_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
 
   if ($entity->bundle() === 'private_message') {
-
     if ($build['#view_mode'] == 'inbox') {
       $component = $display->getComponent('author');
       // Add the author field
-      dpm($entity->get('uid')->getValue())[0]['value'];
+//      dpm($entity->get('uid')->getValue())[0]['value'];
       $author = User::load($entity->get('uid')->getValue()[0]['target_id']);
 
       $build['author'] = array(
@@ -452,7 +451,14 @@ function message_private_entity_view_alter(array &$build, Drupal\Core\Entity\Ent
         )
 
       );
-      ksm($build);
+
+      $created = $entity->getCreatedTime();
+      $component = $display->getComponent('created');
+
+      $build['created'] = [
+        '#markup' =>  '<p>Hello</p>' . \Drupal::service('date.formatter')->format($created, 'date_text'),
+        '#weight'=> $component['weight']
+      ];
     }
 
   }
@@ -468,28 +474,11 @@ function message_private_entity_extra_field_info() {
     'weight' => 0,
     'visible' => FALSE,
   ];
+  $extra_fields['message']['private_message']['display']['created'] = [
+    'label' => t('Created date'),
+    'description' => t('The date the message was created'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
   return $extra_fields;
-}
-
-/**
- * Implements hook_entity_view_alter().
- */
-function message_private_entity_view_alterxx(array &$build, EntityInterface $entity,
-                                          EntityViewDisplayInterface $display) {
-
-    if ($component = $display->getComponent('author')) {
-      $route_params = [
-        'entity_type' => $entity->getEntityTypeId(),
-        'entity_id' => $entity->id(),
-
-      ];
-
-      $build['author'] = [
-        '#type' => 'print_link',
-        '#title' => t('Author'),
-        '#weight' => $component['weight'],
-        '#access' => $access_manager->checkNamedRoute('entity_print.view', $route_params, NULL, TRUE),
-      ];
-    }
-
 }

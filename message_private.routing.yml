@@ -34,28 +34,3 @@ message_private.messages.sent:
   requirements:
     _permission: 'overview messages'
 
-message_private.threads:
-  path: '/admin/content/message-threads'
-  defaults:
-    _title: 'Message Threads'
-    _entity_list: 'message_thread'
-  requirements:
-    _permission: 'overview message threads'
-
-message_private.overview_thread_templates:
-  path: '/admin/structure/message_private'
-  defaults:
-    _controller: '\Drupal\Core\Entity\Controller\EntityListController::listing'
-    entity_type: 'message_thread'
-    _title: 'Message thread'
-  requirements:
-    _permission: 'administer message private'
-
-
-message_private.thread_add:
-  path: '/message-thread/add'
-  defaults:
-    _entity_form: 'message_thread.add'
-    _title: 'Add message thread'
-  requirements:
-    _permission: 'administer message templates'
