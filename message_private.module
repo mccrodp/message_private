@@ -10,6 +10,9 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\message\Entity\Message;
 use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
+use Drupal\Core\Form\FormStateInterface;
+
 
 
 /**
@@ -123,7 +126,7 @@ function message_private_access_callback($message) {
  * the message_text on the edit and create form, and adds custom validation.
  */
 // @todo - check form ID is matching D8 form id.
-function message_private_form_message_private_message_form_alter($form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function message_private_form_message_private_message_form_alter($form, FormStateInterface $form_state, $form_id) {
   $entity = $form_state->getFormObject()->getEntity();
   if ($entity->bundle() == 'private_message') {
     if (isset($form['text']['#type'])) {
@@ -145,7 +148,7 @@ function message_private_form_message_private_message_form_alter($form, \Drupal\
  *   The form state including values submitted.
  */
 // @todo - test this is called and if form should be passed by reference.
-function message_private_form_message_private_message_form_validate($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function message_private_form_message_private_message_form_validate($form, FormStateInterface $form_state) {
   // If there is an imposed message limit set in the admin settings interface.
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
@@ -238,7 +241,7 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
  * profiles, unless the user is in role with bypass access control permission.
  */
 // @todo - check form ID matches D8 form id & add config for user notify field.
-function message_private_form_user_profile_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function message_private_form_user_profile_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
   if (!\Drupal::currentUser()->hasPermission('bypass private message access control')
@@ -252,14 +255,22 @@ function message_private_form_user_profile_form_alter(&$form, \Drupal\Core\Form\
  */
 // @todo - Is this still required in D8 to make twig template discoverable?
 function message_private_theme() {
-  $info['message_private'] = array(
-    'render element' => 'elements',
-    'template' => 'message--private_message',
-    'base hook' => 'message_private',
+  return array(
+    'message_private' => array(
+      'render element' => 'elements',
+      'template' => 'message--private_message',
+      'base hook' => 'message_private',
+    ),
+    // Template is discoverable if the theme name is the same as the template with '_' instead of '-'
+    'message_private__inbox' => array(
+      'variables' => array('messages' => array()),
+    ),
+    'message_private__sent' => array(
+      'variables' => array('messages' => array()),
+    ),
   );
-
-  return $info;
 }
+
 
 /**
  * Implements hook_message_view_alter().
@@ -375,4 +386,104 @@ function _message_private_inbox_access() {
 
   // Allow if the user has the bypass permission
   return AccessResult::allowedIfHasPermission($account, 'bypass private message access control');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function message_private_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state) {
+  $display = $form_state->getFormObject()->getEntity();
+//  $form['fields']['author'] = [
+//    '#type' => 'textfield',
+//    '#title' => '',
+//    '#default_value' => $display->getThirdPartySetting('entity_print', $export_type . '_label', t('View @label', ['@label' => $definition['label']])),
+//  ];
+
+return;
+  $table = &$form['fields'];
+
+
+
+  $table['author'] = [
+    '#type' => 'textfield',
+    '#attributes' => ['class' => ['draggable', 'field-group'], 'id' => 'indent-id'],
+    '#row_type' => 'field',
+    '#region_callback' => 'Drupal\field_ui\Form\EntityViewDisplayEditForm::getRowRegion',
+    '#js_settings' => ['rowHandler' => 'field'],
+    'human_name' => [
+      '#plain_text' => 'Author',
+    ],
+    'weight' => [
+      '#type' => 'textfield',
+      '#default_value' => 0,
+      '#size' => 3,
+      '#attributes' => ['class' => ['field-weight']],
+    ],
+//    'parent_wrapper' => [
+//      'parent' => [
+//        '#type' => 'select',
+//        '#options' => ['indent' => 'Indent'],
+//        '#empty_value' => '',
+//        '#default_value' => '',
+//        '#attributes' => ['class' => ['field-parent']],
+//        '#parents' => ['fields', 'indent', 'parent'],
+//      ],
+//
+//    ],
+  ];
+//  ksm($form);
+//  $form['fields']['author'] = array(
+//     '#title' => 'Author'
+//  );
+}
+
+function message_private_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+
+  if ($entity->bundle() === 'private_message') {
+    if ($build['#view_mode'] == 'inbox') {
+      $component = $display->getComponent('author');
+      // Add the author field
+//      dpm($entity->get('uid')->getValue())[0]['value'];
+      $author = User::load($entity->get('uid')->getValue()[0]['target_id']);
+
+      $build['author'] = array(
+        '#type' => 'link',
+        '#url' => $author->toUrl(),
+        '#title' => $author->getDisplayName(),
+        '#weight' => $component['weight'],
+        '#attributes' => array(
+          'class' => array('message-private-author')
+        )
+
+      );
+
+      $created = $entity->getCreatedTime();
+      $component = $display->getComponent('created');
+
+      $build['created'] = [
+        '#markup' =>  '<p>Hello</p>' . \Drupal::service('date.formatter')->format($created, 'date_text'),
+        '#weight'=> $component['weight']
+      ];
+    }
+
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function message_private_entity_extra_field_info() {
+  $extra_fields['message']['private_message']['display']['author'] = [
+    'label' => t('Author Link'),
+    'description' => t('Provides a link to view the sender of a private message'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+  $extra_fields['message']['private_message']['display']['created'] = [
+    'label' => t('Created date'),
+    'description' => t('The date the message was created'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+  return $extra_fields;
 }

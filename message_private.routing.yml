@@ -12,14 +12,14 @@ message_private.settings:
 message_private.messages:
   path: '/user/{user}/messages'
   defaults:
-    _title: 'Inbox'
-  description: 'Message Private Inbox'
+    _controller: '\Drupal\message_private\Controller\MessagePrivateController::inBox'
   requirements:
     _permission: 'overview messages'
 
 message_private.messages.inbox:
-  path: '/user/{user}/messages'
+  path: '/user/{user}/messages/inbox'
   defaults:
+    _controller: '\Drupal\message_private\Controller\MessagePrivateController::inBox'
     _title: 'Inbox'
   description: 'Message Private Inbox'
   requirements:
@@ -28,7 +28,9 @@ message_private.messages.inbox:
 message_private.messages.sent:
   path: '/user/{user}/messages/sent'
   defaults:
+    _controller: '\Drupal\message_private\Controller\MessagePrivateController::sent'
     _title: 'Sent'
   description: 'Message Private Sent'
   requirements:
     _permission: 'overview messages'
+

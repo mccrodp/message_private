@@ -13,26 +13,27 @@ mode: default
 content:
   created:
     type: datetime_timestamp
-    weight: 4
+    weight: 1
     settings: {  }
     third_party_settings: {  }
   field_message_private_body:
-    type: string_textarea
-    weight: 0
+    field_name: field_message_private_body
+    weight: 4
     settings:
       rows: 5
       placeholder: ''
     third_party_settings: {  }
+    type: string_textarea
   field_message_private_subject:
     type: string_textfield
-    weight: 0
+    weight: 3
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
   field_message_private_to_user:
     type: entity_reference_autocomplete
-    weight: 0
+    weight: 2
     settings:
       match_operator: CONTAINS
       size: 60
@@ -40,7 +41,7 @@ content:
     third_party_settings: {  }
   uid:
     type: entity_reference_autocomplete
-    weight: 3
+    weight: 0
     '#group': advanced
     settings:
       match_operator: CONTAINS
