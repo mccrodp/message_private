@@ -15,27 +15,23 @@ mode: default
 content:
   field_message_private_body:
     type: basic_string
-    weight: 3
-    label: above
+    weight: 2
+    label: hidden
     settings: {  }
     third_party_settings: {  }
-  field_message_private_subject:
-    type: string
-    weight: 2
-    label: inline
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
   field_message_private_to_user:
-    type: entity_reference_entity_view
+    type: author
     weight: 1
-    label: inline
-    settings:
-      view_mode: default
-      link: false
+    label: above
+    settings: {  }
     third_party_settings: {  }
   partial_0:
     weight: 0
     settings: {  }
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  author: true
+  entity_print_view_epub: true
+  entity_print_view_pdf: true
+  entity_print_view_word_docx: true
+  field_message_private_subject: true
