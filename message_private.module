@@ -67,7 +67,7 @@ function message_private_message_access(EntityInterface $message, $operation, Ac
     }
     // Verify that the user can apply the op.
     if ($account->hasPermission($operation . ' any message instance')
-        || $account->hasPermission($operation . ' a private_message message instance', $account)
+        || $account->hasPermission($operation . ' private_message message', $account)
     ) {
       if ($operation != 'create') {
         // Check if the user is message author.
@@ -75,14 +75,19 @@ function message_private_message_access(EntityInterface $message, $operation, Ac
         if ($message->getOwnerId() == $account->id()) {
           return AccessResult::allowed()->cachePerPermissions();
         }
-        $users = $message->get('field_message_private_to_user')->getValue();
-        if ($users && is_array($users)) {
-          foreach ($users as $user_ref) {
-            if ($user_ref['target_id'] == $account->id()) {
-              return AccessResult::allowed()->cachePerPermissions();
+        // Grant view access for recipients of the private message.
+        if ($operation == 'view') {
+          $users = $message->get('field_message_private_to_user')->getValue();
+          if ($users && is_array($users)) {
+            foreach ($users as $user_ref) {
+              if ($user_ref['target_id'] == $account->id()) {
+                return AccessResult::allowed()->cachePerPermissions();
+              }
             }
           }
         }
+        // Deny if user is not message author or viewing recipient.
+        return AccessResult::forbidden()->cachePerPermissions();
       }
       else {
         return AccessResult::allowed()->cachePerPermissions();
