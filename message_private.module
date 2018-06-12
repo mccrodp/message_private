@@ -66,8 +66,8 @@ function message_private_message_access(EntityInterface $message, $operation, Ac
       return AccessResult::allowed()->cachePerPermissions();
     }
     // Verify that the user can apply the op.
-    if ($account->hasPermission($operation . ' any message instance')
-        || $account->hasPermission($operation . ' private_message message', $account)
+    if ($account->hasPermission($operation . ' any private message')
+      || $account->hasPermission($operation . ' own private messages', $account)
     ) {
       if ($operation != 'create') {
         // Check if the user is message author.

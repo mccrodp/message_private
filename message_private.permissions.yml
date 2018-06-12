@@ -6,3 +6,31 @@ bypass private message access control:
 administer message private:
   title: 'Administer message private'
   description: 'Access the message private administration pages.'
+
+view own private messages:
+  title: View own private messages
+  description: Allow to view own private messages
+
+edit own private messages:
+  title: Edit own private messages
+  description: Allowing to edit own private messages
+
+delete own private messages:
+  title: Delete own private messages
+  description: Allowing to delete own private messages
+
+create a private message:
+  title: Create a private message
+  description: Allow to create a private message
+
+view any private message:
+  title: View any private message
+  description: Allow to view any private message
+
+edit any private message:
+  title: Edit any private message
+  description: Allowing to edit any private message
+
+delete any private message:
+  title: Delete any private message
+  description: Allowing to delete any private message
