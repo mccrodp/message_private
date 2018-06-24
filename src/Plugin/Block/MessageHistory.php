@@ -98,12 +98,16 @@ class MessageHistory extends BlockBase implements ContainerFactoryPluginInterfac
       ON mfd.mid = pu.entity_id
       LEFT JOIN {users_field_data} ufd
       ON mfd.uid = ufd.uid
-      LEFT OUTER JOIN {message_history} mh
-      ON mfd.mid = mh.mid
-      WHERE pu.field_message_private_to_user_target_id = :uid 
-      AND mh.timestamp IS NULL
+      WHERE NOT EXISTS (
+        SELECT timestamp FROM message_history
+        WHERE  mfd.mid = message_history.mid
+        AND message_history.uid = :uid
+      )
+      AND pu.field_message_private_to_user_target_id = :uid 
+      AND mfd.created > :limit
       AND mfd.uid != :uid", [
       ':uid' => \Drupal::currentUser()->id(),
+      ':limit' => HISTORY_READ_LIMIT
     ]);
   }
 
