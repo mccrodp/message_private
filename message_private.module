@@ -126,18 +126,26 @@ function message_private_access_callback($message) {
  * the message_text on the edit and create form, and adds custom validation.
  */
 // @todo - check form ID is matching D8 form id.
-function message_private_form_message_private_message_form_alter($form, FormStateInterface $form_state, $form_id) {
+function message_private_form_message_private_message_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
   $entity = $form_state->getFormObject()->getEntity();
   if ($entity->bundle() == 'private_message') {
+    $form['field_message_private_to_user']['widget']['add_more']['#value'] = new TranslatableMarkup('Add another user');
     if (isset($form['text']['#type'])) {
       $form['text']['#type'] = 'hidden'; // @todo - is this necessary now?
     }
-
     // @todo - owner access and validation callback needs testing.
     $form['owner']['#access'] = \Drupal::currentUser()->hasPermission('bypass private message access control');
+
     $form['#validate'][] = 'message_private_form_message_private_message_form_validate';
+    foreach (array_keys($form['actions']) as $action) {
+      if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+        $form['actions'][$action]['#submit'][] = 'message_private_message_form_submit';
+      }
+    }
   }
 }
+
 
 /**
  * Validation for Private Message form.
@@ -148,7 +156,7 @@ function message_private_form_message_private_message_form_alter($form, FormStat
  *   The form state including values submitted.
  */
 // @todo - test this is called and if form should be passed by reference.
-function message_private_form_message_private_message_form_validate($form, FormStateInterface $form_state) {
+function message_private_form_message_private_message_form_validate(&$form, FormStateInterface $form_state) {
   // If there is an imposed message limit set in the admin settings interface.
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
