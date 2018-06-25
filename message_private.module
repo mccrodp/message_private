@@ -12,7 +12,7 @@ use Drupal\message\Entity\Message;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
-
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 
 /**
@@ -126,8 +126,18 @@ function message_private_access_callback($message) {
  * the message_text on the edit and create form, and adds custom validation.
  */
 // @todo - check form ID is matching D8 form id.
-function message_private_form_message_private_message_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function message_private_form_message_private_message_form_alter(&$form, FormStateInterface $form_state) {
+  _message_private_message_form_alter($form, $form_state);
+}
 
+function message_private_form_message_private_message_edit_form_alter(&$form, FormStateInterface $form_state) {
+  _message_private_message_form_alter($form, $form_state);
+}
+
+/*
+ * Helper function to modify message form
+ */
+function _message_private_message_form_alter(&$form, FormStateInterface $form_state){
   $entity = $form_state->getFormObject()->getEntity();
   if ($entity->bundle() == 'private_message') {
     $form['field_message_private_to_user']['widget']['add_more']['#value'] = new TranslatableMarkup('Add another user');
@@ -138,14 +148,8 @@ function message_private_form_message_private_message_form_alter(&$form, FormSta
     $form['owner']['#access'] = \Drupal::currentUser()->hasPermission('bypass private message access control');
 
     $form['#validate'][] = 'message_private_form_message_private_message_form_validate';
-    foreach (array_keys($form['actions']) as $action) {
-      if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-        $form['actions'][$action]['#submit'][] = 'message_private_message_form_submit';
-      }
-    }
   }
 }
-
 
 /**
  * Validation for Private Message form.
