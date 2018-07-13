@@ -8,3 +8,5 @@ dependencies:
   - views
   - message
   - message_notify
+  - message_ui
+  
