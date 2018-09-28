@@ -222,15 +222,9 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
     $mail = array();
     $users = $message->get('field_message_private_to_user');
 
-    if (!empty($users)) {
-      // Make users an array if user ref field is configured to 1 entry.
-      $users = is_array($users) ? $users : array($users);
+    if (!$users->isEmpty()) {
       foreach ($users as $user) {
-        $notify = $user->get('field_private_message_notify');
-        if (!empty($notify) && is_array($notify)) {
-          // Get the 1st value of the array as there is only 1 possible item.
-          $notify = array_shift($notify);
-        }
+        $notify = $user->entity->get('field_message_private_usr_notify')->value;
         // If the user has set field for notifications, add their email.
         if (isset($notify['value']) && $notify['value']) {
           $mail[] = $user->mail;
@@ -258,7 +252,7 @@ function message_private_form_user_profile_form_alter(&$form, FormStateInterface
   // rewrite this call manually.
   if (!\Drupal::currentUser()->hasPermission('bypass private message access control')
     && !\Drupal::config('message_private.settings')->get('email_notify')) {
-    $form['field_private_message_notify']['#access'] = FALSE;
+    $form['field_message_private_usr_notify']['#access'] = FALSE;
   }
 }
 
