@@ -6,5 +6,5 @@ type: module
 configure: message_private.admin_settings
 dependencies:
   - views
-  - message
   - message_notify
+  - message_ui
