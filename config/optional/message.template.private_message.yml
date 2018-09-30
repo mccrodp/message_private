@@ -7,3 +7,6 @@ description: 'Private Message message template.'
 text:
   - "<p>Private Message -</p>\r\n"
 settings: {  }
+third_party_settings:
+  message_ui:
+    enabled: true
