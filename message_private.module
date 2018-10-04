@@ -239,7 +239,7 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
     }
     if (!empty($mail)) {
       /* @var \Drupal\message_notify\MessageNotifier $message_notifier */
-      $message_notifier = $this->container->get('message_notify.sender');
+      $message_notifier = \Drupal::service('message_notify.sender');
       // @todo - figure out how to pass the email addresses to the notify plugin / hook.
       $message_notifier->send($message, array('mail' => implode(',', $mail), 'email'));
     }
