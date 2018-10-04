@@ -74,4 +74,4 @@ before_script:
 # Export database variable for kernel tests.
 - export SIMPLETEST_DB=mysql://root:@127.0.0.1/message_private
 
-script: DRUPAL_DIR=$DRUPAL_DIR MODULE_DIR=$MODULE_DIR $TRAVIS_BUILD_DIR/scripts/travis-ci/run-test.sh $TEST_SUITE
+script: DRUPAL_DIR=$DRUPAL_DIR MODULE_DIR=$MODULE_DIR $TRAVIS_BUILD_DIR/.travis/run-test.sh $TEST_SUITE
