@@ -43,7 +43,7 @@ before_script:
 ### PHP_CodeSniffer only.
 
 # We only need the PHP Code Sniffer (and the Drupal coder).
-- test ${TEST} == "PHP_CodeSniffer" && composer require drupal/coder || true
+- test ${TEST_SUITE} == "PHP_CodeSniffer" && composer require drupal/coder || true
 
 ### PHPUnit only (till the end).
 
