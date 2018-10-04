@@ -11,10 +11,10 @@ env:
   global:
   - COMPOSER_MEMORY_LIMIT=2G
   matrix:
+  - TEST_SUITE=PHP_CodeSniffer
   - TEST_SUITE=8.5.x
   - TEST_SUITE=8.6.x
   - TEST_SUITE=8.7.x
-  - TEST_SUITE=PHP_CodeSniffer
 
 # Only run the coding standards check once.
 matrix:
@@ -37,8 +37,13 @@ before_script:
 # We also don't care if that file exists or not on PHP 7.
 - phpenv config-rm xdebug.ini || true
 
-# Remember the current directory for later use in the Drupal installation.
-- MODULE_DIR=$(pwd)
+# Define the paths used in the test.
+- DRUPAL_DIR=$(pwd)/../build
+- MODULES_DIR=$DRUPAL_DIR/modules/contrib
+- MODULE_DIR=$MODULES_DIR/message_private
+
+# We only need the PHP Code Sniffer (and the Drupal coder).
+- test ${TEST} == "PHP_CodeSniffer" && composer require drupal/coder || true
 
 # Require the version of Drupal 8 core under test. Skip this for the coding
 # standards test.
@@ -48,19 +53,14 @@ before_script:
 - test ${TEST_SUITE} == "PHP_CodeSniffer" || test ${TRAVIS_PHP_VERSION:0:3} == "5.6" || composer require --no-update --update-with-dependencies --dev phpunit/phpunit:~6
 
 # Install dependencies.
-- composer install
-
-# Define the paths used in the test.
-- DRUPAL_DIR=$(pwd)/../build
-- MODULES_DIR=$DRUPAL_DIR/modules/contrib
-- MODULE_DIR=$MODULES_DIR/message_private
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || composer install
 
 # Create database.
-- mysql -e 'CREATE DATABASE message_private'
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || mysql -e 'CREATE DATABASE message_private'
 
 # Symlink the module into the Drupal site.
-- mkdir -p $MODULES_DIR
-- ln -s $TRAVIS_BUILD_DIR $MODULE_DIR
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || mkdir -p $MODULES_DIR
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || ln -s $TRAVIS_BUILD_DIR $MODULE_DIR
 
 # Start a web server on port 8888 in the background.
 - test ${TEST_SUITE} == "PHP_CodeSniffer" || nohup php -S localhost:8888 --docroot $DRUPAL_DIR > /dev/null 2>&1 &
@@ -69,9 +69,9 @@ before_script:
 - test ${TEST_SUITE} == "PHP_CodeSniffer" || until curl -s localhost:8888; do true; done > /dev/null
 
 # Export web server URL for browser tests.
-- export SIMPLETEST_BASE_URL=http://localhost:8888
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || export SIMPLETEST_BASE_URL=http://localhost:8888
 
 # Export database variable for kernel tests.
-- export SIMPLETEST_DB=mysql://root:@127.0.0.1/message_private
+- test ${TEST_SUITE} == "PHP_CodeSniffer" || export SIMPLETEST_DB=mysql://root:@127.0.0.1/message_private
 
-script: DRUPAL_DIR=$DRUPAL_DIR MODULE_DIR=$MODULE_DIR $TRAVIS_BUILD_DIR/.travis/run-test.sh $TEST_SUITE
+script: DRUPAL_DIR=$DRUPAL_DIR MODULE_DIR=$MODULE_DIR $TRAVIS_BUILD_DIR/.travis/run-tests.sh $TEST_SUITE
