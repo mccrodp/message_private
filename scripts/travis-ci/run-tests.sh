@@ -19,7 +19,8 @@ case "$1" in
     8.*.x)
         mysql_to_ramdisk
         cd ${TRAVIS_BUILD_DIR}/
-        ./vendor/bin/phpunit ${DRUPAL_DIR}/core ./tests
+        ls -la
+        ./vendor/bin/phpunit -c ${DRUPAL_DIR}/core ./tests
         exit $?
         ;;
     *)
