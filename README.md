@@ -40,8 +40,9 @@ INSTALLATION
 
 CONFIGURATION
 -------------
-Show notification boolean on user form fields: `/admin/config/people/accounts/form-display`
-This will be addressed automatically in a hook later.
+Show notification boolean on user form fields:
+`/admin/config/people/accounts/form-display`. This will be addressed
+automatically in a hook later.
 
 
 HOW TO USE
