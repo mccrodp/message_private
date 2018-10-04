@@ -14,7 +14,7 @@ TEST_DIRS=($MODULE_DIR/tests)
 
 case "$1" in
     PHP_CodeSniffer)
-        cd ${MODULE_DIR}/
+        cd ${TRAVIS_BUILD_DIR}/
         ./vendor/bin/phpcs
         exit $?
         ;;
