@@ -1,0 +1,5 @@
+message_private_message_limit: 0
+email_notify: true
+message_add_local_action: true
+default_limit: 0
+default_interval: 0

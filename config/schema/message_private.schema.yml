@@ -1,0 +1,31 @@
+# Schema for the configuration files of the message_private module.
+
+# Module settings.
+message_private.settings:
+  type: config_object
+  label: 'Message Private settings'
+  mapping:
+    message_private_message_limit:
+      type: integer
+      label: 'Message limit'
+    email_notify:
+      type: boolean
+      label: 'Email Notifications'
+    message_add_local_action:
+      type: boolean
+      label: 'Local action links'
+    default_limit:
+      type: integer
+      label: 'Default limit'
+    default_interval:
+      type: integer
+      label: 'Default interval'
+
+# Custom Views access plugin.
+views.access.message_private:
+  type: mapping
+  label: 'Message private'
+  mapping:
+    message_private:
+      type: string
+      label: 'Permission'
