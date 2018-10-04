@@ -1,8 +1,26 @@
 {
   "name": "drupal/message_private",
-  "description": "Message Private",
+  "description": "Private messaging module based on Message stack.",
   "type": "drupal-module",
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
-  "require": {}
+  "prefer-stable": true,
+  "homepage": "https://www.drupal.org/project/message_private",
+  "require": {
+    "php": "^5.6|^7.0",
+    "drupal/core": "^8.6"
+  },
+  "require-dev": {
+    "composer/installers": "^1.2",
+    "drupal-composer/drupal-scaffold": "^2.5",
+    "drupal/coder": "^8.3.1",
+    "webflo/drupal-core-require-dev": "~8.5"
+  },
+  "extra": {
+    "installer-paths": {
+      "../build/core": ["type:drupal-core"],
+      "../build/modules/contrib/{$name}": ["type:drupal-module"],
+      "../build/themes/contrib/{$name}": ["type:drupal-theme"]
+    }
+  }
 }
