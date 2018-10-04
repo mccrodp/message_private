@@ -16,14 +16,13 @@ case "$1" in
         ./vendor/bin/phpcs
         exit $?
         ;;
-    *)
+    8.*.x)
         mysql_to_ramdisk
-        cd ${DRUPAL_DIR}/
-        EXIT=0
-        TEST_DIRS=(${TRAVIS_BUILD_DIR}/tests)
-        for i in ${TEST_DIRS[@]}; do
-            echo "Executing tests in $i"
-            ${TRAVIS_BUILD_DIR}/vendor/bin/phpunit -c ${DRUPAL_DIR}/core/phpunit.xml.dist $i || EXIT=1
-        done
-        exit $EXIT
+        cd ${TRAVIS_BUILD_DIR}/
+        ./vendor/bin/phpunit ${DRUPAL_DIR}/core ./tests
+        exit $?
+        ;;
+    *)
+        echo "Unknown test '$1'"
+        exit 1
 esac

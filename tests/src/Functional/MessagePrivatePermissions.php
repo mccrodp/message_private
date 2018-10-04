@@ -11,7 +11,7 @@ use Drupal\message\Entity\Message;
 /**
  * Testing the private message access use case.
  *
- * @group Message Private
+ * @group message_private
  */
 class MessagePrivatePermissions extends MessageTestBase {
 
