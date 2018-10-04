@@ -3,7 +3,7 @@
 namespace Drupal\Tests\message_private\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\message\Functional\MessageTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use Drupal\message\Entity\Message;
@@ -13,7 +13,7 @@ use Drupal\message\Entity\Message;
  *
  * @group message_private
  */
-class MessagePrivatePermissionsTests extends BrowserTestBase {
+class MessagePrivatePermissionsTests extends MessageTestBase {
 
   /**
    * The message access control handler.
