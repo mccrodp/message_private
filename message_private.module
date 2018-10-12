@@ -450,3 +450,13 @@ function message_private_entity_extra_field_info() {
   ];
   return $extra_fields;
 }
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function message_private_entity_type_alter(array &$entity_types) {
+
+  // Set the access class for message to our module version.
+  $entity_types['message']
+    ->setAccessClass('default', 'Drupal\message_private\MessagePrivateAccessControlHandler');
+}
