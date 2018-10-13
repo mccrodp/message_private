@@ -1,19 +1,23 @@
 <?php
+
 /**
  * @file
  * Message Private with access permissions based on message fields.
  */
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\message\MessageInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\message\Entity\Message;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-
 
 /**
  * The default index for settings such as role.
@@ -40,7 +44,6 @@ const MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX = 1440;
  */
 const MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN = 1;
 
-
 /**
  * Implements hook_help().
  */
@@ -48,7 +51,13 @@ function message_private_help($route_name, RouteMatchInterface $arg) {
   switch ($route_name) {
     case 'help.page.message_private':
       $output = file_get_contents(drupal_get_path('module', 'message_private') . '/README.md');
-      return \Drupal::moduleHandler()->moduleExists('markdown') ? \Drupal\Component\Utility\Xss::filterAdmin(\Drupal::moduleHandler()->invoke('markdown', 'filter', ['process', 0, -1, $output])) : '<h3>Message Private README</h3><pre>' . \Drupal\Component\Utility\Html::escape($output) . '</pre>';
+      $module_hander = \Drupal::moduleHandler();
+      return $module_hander->moduleExists('markdown') ? Xss::filterAdmin($module_hander->invoke('markdown', 'filter', [
+        'process',
+        0,
+        -1,
+        $output,
+      ])) : '<h3>Message Private README</h3><pre>' . Html::escape($output) . '</pre>';
   }
 }
 
@@ -110,7 +119,12 @@ function message_private_message_access(EntityInterface $message, $operation, Ac
  * @return bool
  *   TRUE if the user is allowed perform the operation, FALSE otherwise.
  */
-// @todo: code as Access class & associate service entry to local task/actions.
+
+/**
+ * Provides an access callback.
+ *
+ * @todo: code as Access class & associate service entry to local task/actions.
+ */
 function message_private_access_callback($message) {
   if ($message->template == 'private_message') {
     return \Drupal::currentUser()->hasPermission('bypass private message access control') || \Drupal::currentUser()->hasPermission('view a private_message message instance');
@@ -124,25 +138,30 @@ function message_private_access_callback($message) {
  * This function is defined to override that provided by Message UI module. This
  * allows override specific values of the form such as the cancel link. It hides
  * the message_text on the edit and create form, and adds custom validation.
+ *
+ * @todo - check form ID is matching D8 form id.
  */
-// @todo - check form ID is matching D8 form id.
 function message_private_form_message_private_message_form_alter(&$form, FormStateInterface $form_state) {
   _message_private_message_form_alter($form, $form_state);
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
 function message_private_form_message_private_message_edit_form_alter(&$form, FormStateInterface $form_state) {
   _message_private_message_form_alter($form, $form_state);
 }
 
-/*
- * Helper function to modify message form
+/**
+ * Helper function to modify message form.
  */
-function _message_private_message_form_alter(&$form, FormStateInterface $form_state){
+function _message_private_message_form_alter(&$form, FormStateInterface $form_state) {
   $entity = $form_state->getFormObject()->getEntity();
   if ($entity->bundle() == 'private_message') {
     $form['field_message_private_to_user']['widget']['add_more']['#value'] = new TranslatableMarkup('Add another user');
     if (isset($form['text']['#type'])) {
-      $form['text']['#type'] = 'hidden'; // @todo - is this necessary now?
+      // @todo - is this necessary now?
+      $form['text']['#type'] = 'hidden';
     }
     // @todo - owner access and validation callback needs testing.
     $form['owner']['#access'] = \Drupal::currentUser()->hasPermission('bypass private message access control');
@@ -159,7 +178,12 @@ function _message_private_message_form_alter(&$form, FormStateInterface $form_st
  * @param mixed $form_state
  *   The form state including values submitted.
  */
-// @todo - test this is called and if form should be passed by reference.
+
+/**
+ * Provides a validation callback.
+ *
+ * @todo - test this is called and if form should be passed by reference.
+ */
 function message_private_form_message_private_message_form_validate(&$form, FormStateInterface $form_state) {
   // If there is an imposed message limit set in the admin settings interface.
   // The correct configuration object could not be determined. You'll need to
@@ -187,10 +211,10 @@ function message_private_form_message_private_message_form_validate(&$form, Form
     // Get total amount of this user's messages since last interval.
     $query = \Drupal::entityQuery('message');
     $total = $query->condition('template', 'private_message')
-     ->condition('timestamp', $interval_timestamp, '>')
-     ->condition('uid', $user->id())
-     ->count()
-     ->execute();
+      ->condition('timestamp', $interval_timestamp, '>')
+      ->condition('uid', $user->id())
+      ->count()
+      ->execute();
 
     // Display error preventing message create when total messages over limit.
     if ($total >= $limit) {
@@ -208,7 +232,7 @@ function message_private_form_message_private_message_form_validate(&$form, Form
  * this may be an issue with the message module itself as I don't
  * think escaping strings for email should be done in this module.
  */
-function message_private_message_insert(\Drupal\message\MessageInterface $message) {
+function message_private_message_insert(MessageInterface $message) {
   // Prepare message notifications for private messages if notifications are on.
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
@@ -219,12 +243,12 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
     // function message_notify_send_message tries to re-save as a new message.
     $message = Message::load($message->id());
 
-    $mail = array();
+    $mail = [];
     $users = $message->get('field_message_private_to_user');
 
     if (!empty($users)) {
       // Make users an array if user ref field is configured to 1 entry.
-      $users = is_array($users) ? $users : array($users);
+      $users = is_array($users) ? $users : [$users];
       foreach ($users as $user) {
         $notify = $user->get('field_private_message_notify');
         if (!empty($notify) && is_array($notify)) {
@@ -239,9 +263,9 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
     }
     if (!empty($mail)) {
       /* @var \Drupal\message_notify\MessageNotifier $message_notifier */
-      $message_notifier = $this->container->get('message_notify.sender');
+      $message_notifier = \Drupal::service('message_notify.sender');
       // @todo - figure out how to pass the email addresses to the notify plugin / hook.
-      $message_notifier->send($message, array('mail' => implode(',', $mail), 'email'));
+      $message_notifier->send($message, ['mail' => implode(',', $mail), 'email']);
     }
   }
 }
@@ -251,8 +275,9 @@ function message_private_message_insert(\Drupal\message\MessageInterface $messag
  *
  * If email notifications are disabled, hide the per user setting on user
  * profiles, unless the user is in role with bypass access control permission.
+ *
+ * @todo - check form ID matches D8 form id & add config for user notify field.
  */
-// @todo - check form ID matches D8 form id & add config for user notify field.
 function message_private_form_user_profile_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
@@ -264,30 +289,32 @@ function message_private_form_user_profile_form_alter(&$form, FormStateInterface
 
 /**
  * Implements hook_theme().
+ *
+ * @todo - Is this still required in D8 to make twig template discoverable?
  */
-// @todo - Is this still required in D8 to make twig template discoverable?
 function message_private_theme() {
-  return array(
-    'message_private' => array(
+  return [
+    'message_private' => [
       'render element' => 'elements',
       'template' => 'message--private_message',
       'base hook' => 'message_private',
-    ),
-    // Template is discoverable if the theme name is the same as the template with '_' instead of '-'
-    'message_private__inbox' => array(
-      'variables' => array('messages' => array()),
-    ),
-    'message_private__sent' => array(
-      'variables' => array('messages' => array()),
-    ),
-  );
+    ],
+    // Template is discoverable if the theme name is the same as the template
+    // with '_' instead of '-'.
+    'message_private__inbox' => [
+      'variables' => ['messages' => []],
+    ],
+    'message_private__sent' => [
+      'variables' => ['messages' => []],
+    ],
+  ];
 }
-
 
 /**
  * Implements hook_message_view_alter().
+ *
+ * @todo - Is this still required in D8 to make twig template discoverable?
  */
-// @todo - Is this still required in D8 to make twig template discoverable?
 function message_private_message_view_alter(&$build) {
   // Use template_preprocess_message_private for private_message messages only.
   if (!empty($build['#bundle']) && $build['#bundle'] == 'private_message') {
@@ -297,8 +324,9 @@ function message_private_message_view_alter(&$build) {
 
 /**
  * Process variables for message--private_message.html.twig.
+ *
+ * @todo - Is there a better alternative to this?
  */
-// @todo - Is there a better alternative to this?
 function template_preprocess_message_private(&$variables) {
   // Call the parent message template function defined in message module.
   if (function_exists('template_preprocess_message')) {
@@ -312,19 +340,18 @@ function template_preprocess_message_private(&$variables) {
   if (!empty($message) && $uid = $message->uid) {
     $variables['date'] = format_date($message->timestamp);
     // @FIXME
-// theme() has been renamed to _theme() and should NEVER be called directly.
-// Calling _theme() directly can alter the expected output and potentially
-// introduce security issues (see https://www.drupal.org/node/2195739). You
-// should use renderable arrays instead.
-// 
-// 
-// @see https://www.drupal.org/node/2195739
-// $variables['name'] = theme('username', array('account' => user_load($uid)));
-
-    $variables['submitted'] = t('Sent by !username on !datetime', array(
-        '!username' => $variables['name'],
-        '!datetime' => $variables['date'],
-    ));
+    // theme() has been renamed to _theme() and should NEVER be called directly.
+    // Calling _theme() directly can alter the expected output and potentially
+    // introduce security issues (see https://www.drupal.org/node/2195739). You
+    // should use renderable arrays instead.
+    //
+    //
+    // @see https://www.drupal.org/node/2195739
+    // $variables['name'] = theme('username', ['account' => user_load($uid)]);
+    $variables['submitted'] = t('Sent by !username on !datetime', [
+      '!username' => $variables['name'],
+      '!datetime' => $variables['date'],
+    ]);
   }
 }
 
@@ -339,10 +366,11 @@ function template_preprocess_message_private(&$variables) {
  *
  * @return mixed
  *   Either a role id or null.
+ *
+ * @todo - Is there a better location for this?
  */
-// @todo - Is there a better location for this?
 function _message_private_max_message_limit_role($roles) {
-  $limits = array();
+  $limits = [];
 
   // The correct configuration object could not be determined. You'll need to
   // rewrite this call manually.
@@ -371,7 +399,6 @@ function _message_private_max_message_limit_role($roles) {
     // rewrite this call manually.
     $limit = \Drupal::config('message_private.settings')->get($limit_name);
 
-
     // Ensure we have existing valid numerical values for both variables.
     if (!empty($limit) && ctype_digit($limit) && !empty($interval) && ctype_digit($interval)) {
       $limits[$rid] = $interval / $limit;
@@ -385,6 +412,7 @@ function _message_private_max_message_limit_role($roles) {
  * Views Plugin access callback.
  *
  * @return \Drupal\Core\Access\AccessResult
+ *   The access result object.
  */
 function _message_private_inbox_access() {
   $account = \Drupal::currentUser();
@@ -396,36 +424,38 @@ function _message_private_inbox_access() {
     return AccessResult::allowed();
   }
 
-  // Allow if the user has the bypass permission
+  // Allow if the user has the bypass permission.
   return AccessResult::allowedIfHasPermission($account, 'bypass private message access control');
 }
 
-
-function message_private_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+/**
+ * Implements hook_entity_view_alter().
+ */
+function message_private_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
 
   if ($entity->bundle() === 'private_message') {
     if ($build['#view_mode'] == 'inbox') {
       $component = $display->getComponent('author');
-      // Add the author field
+      // Add the author field.
       $author = User::load($entity->get('uid')->getValue()[0]['target_id']);
 
-      $build['author'] = array(
+      $build['author'] = [
         '#type' => 'link',
         '#url' => $author->toUrl(),
         '#title' => $author->getDisplayName(),
         '#weight' => $component['weight'],
-        '#attributes' => array(
-          'class' => array('message-private-author')
-        )
+        '#attributes' => [
+          'class' => ['message-private-author'],
+        ],
 
-      );
+      ];
 
       $created = $entity->getCreatedTime();
       $component = $display->getComponent('created');
 
       $build['created'] = [
-        '#markup' =>  '<p>Hello</p>' . \Drupal::service('date.formatter')->format($created, 'date_text'),
-        '#weight'=> $component['weight']
+        '#markup' => '<p>Hello</p>' . \Drupal::service('date.formatter')->format($created, 'date_text'),
+        '#weight' => $component['weight'],
       ];
     }
 

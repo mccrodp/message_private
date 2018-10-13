@@ -3,11 +3,8 @@
 namespace Drupal\message_private\Controller;
 
 use Drupal\Core\Url;
-use Drupal\user\entity\User;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\message\Entity\Message;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\message\MessageTemplateInterface;
 
 /**
  * Controller for viewing private messages.
@@ -37,36 +34,35 @@ class MessagePrivateController extends ControllerBase implements ContainerInject
   }
 
   /**
-   * Generates output of all messages sent to the current user
+   * Generates output of all messages sent to the current user.
    *
-   *
-   * @return
+   * @return array
    *   A render array for a list of the messages;
    */
   public function inBox($user) {
-    $messages = array();
+    $messages = [];
 
     // Get messages sent to the current user
     // Return build array.
     if (!empty($messages)) {
-      return array(
+      return [
         '#theme' => 'message_private__inbox',
-        '#messages' => $messages
-      );
+        '#messages' => $messages,
+      ];
     }
     else {
       $url = Url::fromRoute('message.template_add');
-      return array(
-        '#markup' => 'You have no messages in your inbox. Try sending a message to someone <a href="/' . $url->getInternalPath() . '">sending a message to someone</a>.'
-      );
+      return [
+        '#markup' => 'You have no messages in your inbox. Try sending a message to someone <a href="/' . $url->getInternalPath() . '">sending a message to someone</a>.',
+      ];
     }
   }
 
   /**
    * Generates form output for adding a new message entity of message_template.
    *
-   * @param \Drupal\message\MessageTemplateInterface $message_template
-   *   The message template object.
+   * @param mixed $user
+   *   TBD.
    *
    * @return array
    *   An array as expected by drupal_render().
@@ -74,18 +70,17 @@ class MessagePrivateController extends ControllerBase implements ContainerInject
   public function sent($user) {
     // Return build array.
     if (!empty($messages)) {
-      return array(
+      return [
         '#theme' => 'message_private__inbox',
-        '#messages' => $messages
-      );
+        '#messages' => $messages,
+      ];
     }
     else {
       $url = Url::fromRoute('message.template_add');
-      return array(
-        '#markup' => 'You have no messages in your inbox. Try sending a message to someone <a href="/' . $url->getInternalPath() . '">sending a message to someone</a>.'
-      );
+      return [
+        '#markup' => 'You have no messages in your inbox. Try sending a message to someone <a href="/' . $url->getInternalPath() . '">sending a message to someone</a>.',
+      ];
     }
   }
-
 
 }

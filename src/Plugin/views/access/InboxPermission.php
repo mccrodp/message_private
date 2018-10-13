@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\message_private\Plugin\views\access\InboxPermission.
- */
-
 namespace Drupal\message_private\Plugin\views\access;
 
 use Drupal\Core\Cache\Cache;
@@ -26,20 +21,6 @@ use Symfony\Component\Routing\Route;
  * )
  */
 class InboxPermission extends AccessPluginBase implements CacheableDependencyInterface {
-
-  /**
-   * Constructs a Permission object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-  }
 
   /**
    * {@inheritdoc}
@@ -66,6 +47,9 @@ class InboxPermission extends AccessPluginBase implements CacheableDependencyInt
     $route->setRequirement('_custom_access', '_message_private_inbox_access');
   }
 
+  /**
+   * TBD.
+   */
   public function summaryTitle() {
     return $this->t('InboxPermission');
   }
