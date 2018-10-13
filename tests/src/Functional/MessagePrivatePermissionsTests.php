@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Definition of Drupal\message_private\Tests\MessagePrivatePermissions.
- */
-
 namespace Drupal\Tests\message_private\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -16,9 +11,9 @@ use Drupal\message\Entity\Message;
 /**
  * Testing the private message access use case.
  *
- * @group Message Private
+ * @group message_private
  */
-class MessagePrivatePermissions extends MessageTestBase {
+class MessagePrivatePermissionsTests extends MessageTestBase {
 
   /**
    * The message access control handler.
@@ -29,13 +24,15 @@ class MessagePrivatePermissions extends MessageTestBase {
 
   /**
    * The user account object.
-   * @var
+   *
+   * @var \Drupal\user\UserInterface
    */
   protected $account;
 
   /**
    * The user role.
-   * @var
+   *
+   * @var string
    */
   protected $rid;
 
@@ -44,20 +41,17 @@ class MessagePrivatePermissions extends MessageTestBase {
    *
    * @var array
    */
-  public static $modules = ['message', 'message_notify', 'message_ui', 'message_private'];
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Message Private permissions',
-      'description' => 'Testing the use case of message_private_message_access hook.',
-      'group' => 'Message Private',
-    );
-  }
+  public static $modules = [
+    'message',
+    'message_notify',
+    'message_ui',
+    'message_private',
+  ];
 
   /**
    * {@inheritdoc}
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp();
 
     $this->accessHandler = \Drupal::entityManager()->getAccessControlHandler('message');
@@ -71,25 +65,30 @@ class MessagePrivatePermissions extends MessageTestBase {
   /**
    * Test private message workflow.
    */
-  function testMessageUiPermissions() {
-    $this->drupalLogin($this->account); // User login.
-    $create_url = '/message/add/private_message'; // Set our create url.
+  public function testMessageUiPermissions() {
+    // User login.
+    $this->drupalLogin($this->account);
+    // Set our create url.
+    $create_url = '/message/add/private_message';
 
     // Verify the user can't create the message.
     $this->drupalGet($create_url);
-    $this->assertResponse(403); // The user can't create a private message.
+    // The user can't create a private message.
+    $this->assertResponse(403);
 
     // Grant and check create permissions for a message.
     $this->grantMessagePrivatePermission('create');
     $this->drupalGet($create_url);
 
     // If we get a valid response.
-    $this->assertResponse(200); // Check for valid response.
+    // Check for valid response.
+    $this->assertResponse(200);
 
     // Create a message at current page / url.
-    $this->drupalPostForm(NULL, array(), t('Save'));
+    $this->drupalPostForm(NULL, [], t('Save'));
 
-    $msg_url = '/message/1'; // Create the message url.
+    // Create the message url.
+    $msg_url = '/message/1';
 
     // Verify the user now can see the text.
     $this->grantMessagePrivatePermission('view');
@@ -119,7 +118,7 @@ class MessagePrivatePermissions extends MessageTestBase {
 
     // Grant the permission to the user.
     $this->grantMessagePrivatePermission('delete');
-    $this->drupalPostForm($msg_url . '/delete', array(), t('Delete'));
+    $this->drupalPostForm($msg_url . '/delete', [], t('Delete'));
 
     // The user can delete a private message.
     $this->assertResponse(200);
@@ -132,15 +131,15 @@ class MessagePrivatePermissions extends MessageTestBase {
     // The user cannot administer message_private.
     $this->assertResponse(403);
 
-    user_role_grant_permissions($this->rid, array('administer message private'));
+    user_role_grant_permissions($this->rid, ['administer message private']);
     $this->drupalGet($admin_url);
 
     // The user can administer message_private.
     $this->assertResponse(200);
 
-    // Create a new user with the bypass access permission and verify the bypass.
+    // Create a user with the bypass access permission and verify the bypass.
     $this->drupalLogout();
-    $user = $this->drupalCreateUser(array('bypass private message access control'));
+    $user = $this->drupalCreateUser(['bypass private message access control']);
 
     // Verify the user can by pass the message access control.
     $this->drupalLogin($user);
@@ -153,11 +152,11 @@ class MessagePrivatePermissions extends MessageTestBase {
   /**
    * Grant to the user a specific permission.
    *
-   * @param $operation
-   *  The type of operation - create, update, delete or view.
+   * @param string $operation
+   *   The type of operation - create, update, delete or view.
    */
   private function grantMessagePrivatePermission($operation) {
-    user_role_grant_permissions($this->rid, array($operation . ' private_message message'));
+    user_role_grant_permissions($this->rid, [$operation . ' private_message message']);
   }
 
   /**
@@ -167,17 +166,17 @@ class MessagePrivatePermissions extends MessageTestBase {
     $this->drupalLogin($this->account);
 
     // Setting up the operation and the expected value from the access callback.
-    $permissions = array(
+    $permissions = [
       'create' => TRUE,
       'view' => TRUE,
       'delete' => FALSE,
       'update' => FALSE,
-    );
+    ];
 
     // Get the message template and create an instance.
     $message_template = $this->loadMessageTemplate('private_message');
     /* @var $message Message */
-    $message = Message::create(array('template' => $message_template->id()));
+    $message = Message::create(['template' => $message_template->id()]);
     $message->setOwner($this->account);
     $message->save();
 
@@ -186,12 +185,13 @@ class MessagePrivatePermissions extends MessageTestBase {
       // check which value need to return. If the access control function will
       // return the expected value then we know the hook got in action.
       $message->{$op} = $value;
-      $params = array(
+      $params = [
         '@operation' => $op,
         '@value' => $value,
-      );
+      ];
 
       $this->assertEqual($value, $this->accessHandler->access($message, $op, $this->account), new FormattableMarkup('The hook return @value for @operation', $params));
     }
   }
+
 }

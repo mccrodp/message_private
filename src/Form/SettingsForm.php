@@ -1,9 +1,4 @@
 <?php
-/**
- * @file
- *
- * Contains \Drupal\message_private\Form\SettingsForm.
- */
 
 namespace Drupal\message_private\Form;
 
@@ -38,7 +33,6 @@ class SettingsForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
     return ['message_private.settings'];
   }
-
 
   /**
    * Holds the name of the keys we holds in the variable.
@@ -135,14 +129,12 @@ class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('Enter a message limit') . ' ' . MESSAGE_PRIVATE_MESSAGE_LIMIT_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_LIMIT_MAX,
     ];
 
-
-     $form['interval_limit'][MESSAGE_PRIVATE_DEFAULT_INDEX]['default_interval'] = [
-       '#type' => 'textfield',
-       '#title' => $this->t('Interval'),
-       '#default_value' => $config->get('default_interval'),
-       '#description' => $this->t('Enter an interval in minutes') . ' ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX,
-     ];
-
+    $form['interval_limit'][MESSAGE_PRIVATE_DEFAULT_INDEX]['default_interval'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Interval'),
+      '#default_value' => $config->get('default_interval'),
+      '#description' => $this->t('Enter an interval in minutes') . ' ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX,
+    ];
 
     // Generate variable names for all roles used with get/set in admin form.
     foreach (user_roles() as $id => $role) {
@@ -150,26 +142,26 @@ class SettingsForm extends ConfigFormBase {
       $limit_name = 'message_private_' . $role_name . '_limit';
       $interval_name = 'message_private_' . $role_name . '_interval';
 
-      $form['interval_limit'][$id] = array(
+      $form['interval_limit'][$id] = [
         '#type' => 'fieldset',
         '#title' => $role->label(),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
-      );
+      ];
 
-      $form['interval_limit'][$id][$limit_name] = array(
+      $form['interval_limit'][$id][$limit_name] = [
         '#type' => 'textfield',
         '#title' => $this->t('Limit'),
         '#default_value' => $config->get($limit_name),
         '#description' => $this->t('Enter a message limit') . ' ' . MESSAGE_PRIVATE_MESSAGE_LIMIT_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_LIMIT_MAX,
-      );
+      ];
 
-      $form['interval_limit'][$id][$interval_name] = array(
+      $form['interval_limit'][$id][$interval_name] = [
         '#type' => 'textfield',
         '#title' => $this->t('Interval'),
         '#default_value' => $config->get($interval_name),
         '#description' => $this->t('Enter an interval in minutes') . ' ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX,
-      );
+      ];
     }
 
     return parent::buildForm($form, $form_state);
@@ -236,9 +228,10 @@ class SettingsForm extends ConfigFormBase {
   }
 
   /**
-   * Validate limit and interval values and show any errors on the form elements.
+   * Validate limit and interval values and show any errors on form elements.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
    * @param mixed $limit_element
    *   Limit form element reference.
    * @param mixed $interval_element
@@ -259,7 +252,7 @@ class SettingsForm extends ConfigFormBase {
       }
       // Check is numeric and between the boundaries.
       if (!ctype_digit($interval) || $interval > MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX || $interval < MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN) {
-         $form_state->setErrorByName($interval_element,
+        $form_state->setErrorByName($interval_element,
            $this->t('Enter a numerical interval in minutes between') . ' '
           . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MIN . ' - ' . MESSAGE_PRIVATE_MESSAGE_INTERVAL_MAX . '.');
       }
@@ -270,4 +263,5 @@ class SettingsForm extends ConfigFormBase {
       $form_state->setErrorByName($interval_element);
     }
   }
+
 }

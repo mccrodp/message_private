@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 
 /**
- * Provides a 'Message History' Block with links to all new messages
+ * Provides a 'Message History' Block with links to all new messages.
  *
  * @Block(
  *   id = "message_private_new_message",
@@ -18,7 +18,7 @@ use Drupal\Core\Extension\ModuleHandler;
 class MessageHistory extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The module handler
+   * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandler
    */
@@ -40,7 +40,6 @@ class MessageHistory extends BlockBase implements ContainerFactoryPluginInterfac
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->moduleHandler = $module_handler;
   }
-
 
   /**
    * {@inheritdoc}
@@ -66,32 +65,35 @@ class MessageHistory extends BlockBase implements ContainerFactoryPluginInterfac
     foreach ($result as $row) {
       $children[$row->mid] = [
         'New message' => [
-          '#markup' => '<a href="/message/' . $row->mid . '">'. $row->name . '</a>',
+          '#markup' => '<a href="/message/' . $row->mid . '">' . $row->name . '</a>',
           '#wrapper_attributes' => [
             'class' => ['message-history-item'],
           ],
-        ]
+        ],
       ];
     }
 
     if (empty($children)) {
       return [
-        '#markup' => t('You have no new messages')
+        '#markup' => t('You have no new messages'),
       ];
     }
     $items[] = [
       '#theme' => 'item_list',
       '#items' => $children,
       '#cache' => [
-        'max-age' => 0
-      ]
+        'max-age' => 0,
+      ],
     ];
 
     return $items;
   }
 
+  /**
+   * TBD.
+   */
   protected function getUnreadMessages() {
-    // Find messages for the current user
+    // Find messages for the current user.
     return db_query("SELECT mfd.mid, mfd.uid, ufd.name
       FROM {message_field_data} mfd
       LEFT JOIN {message__field_message_private_to_user} pu 
@@ -106,14 +108,17 @@ class MessageHistory extends BlockBase implements ContainerFactoryPluginInterfac
       AND pu.field_message_private_to_user_target_id = :uid 
       AND mfd.created > :limit
       AND mfd.uid != :uid", [
-      ':uid' => \Drupal::currentUser()->id(),
-      ':limit' => HISTORY_READ_LIMIT
-    ]);
+        ':uid' => \Drupal::currentUser()->id(),
+        ':limit' => HISTORY_READ_LIMIT,
+      ]);
   }
 
+  /**
+   * TBD.
+   */
   protected function messageHistoryModuleRequired() {
     return [
-      '#markup' => t('Enable Message History Module to display New Messages block')
+      '#markup' => t('Enable Message History Module to display New Messages block'),
     ];
   }
 
